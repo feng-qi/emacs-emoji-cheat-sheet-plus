@@ -8,7 +8,7 @@
 ;; URL: https://github.com/syl20bnr/emacs-emoji-cheat-sheet-plus
 ;; Created: May 24 2015
 ;; Keywords: emacs emoji
-;; Package-Requires: ((emacs "24") (helm "1.6.4"))
+;; Package-Requires: ((emacs "24"))
 
 
 ;; This program is free software; you can redistribute it and/or
@@ -33,9 +33,6 @@
 ;;   emoji buffer
 ;; - new minor mode `emoji-cheat-sheet-plus-display-mode' which replaces
 ;;   emoji codes in buffer by the corresponding image
-;; - new function `emoji-cheat-sheet-plus-insert' to insert an emoji at point
-;;   using an helm front-end. It is possible to insert several emoji with helm
-;;   persistent action mechanism or multiple selection.
 
 ;; This version is stand-alone and does not require the original package
 ;; `emacs-emoji-cheat-sheet'.
@@ -65,8 +62,6 @@
 
 
 ;;; Code:
-
-(require 'helm)
 
 
 ;; Internal
@@ -193,44 +188,6 @@
     (read-only-mode)
     (add-hook 'post-command-hook 'emoji-cheat-sheet-plus-delayed-echo
               nil 'local)))
-
-
-;; Insert Emojis with Helm
-
-(defvar emoji-cheat-sheet-plus--helm-source
-  (helm-build-in-buffer-source "Emoji Cheat Sheet"
-    :init (lambda ()
-            (emoji-cheat-sheet-plus--create-cache)
-            (with-current-buffer (helm-candidate-buffer 'global)
-              (emoji-cheat-sheet-plus-display-mode -1)
-              (mapc (lambda (x)
-                      (insert-image
-                       (cdr x)
-                       (symbol-name (car x)))
-                      (insert (concat " "
-                                      (symbol-name (car x))
-                                      "\n")))
-                    emoji-cheat-sheet-plus-image--cache)))
-    :get-line #'buffer-substring
-    :action '(("Insert into buffer" .
-               emoji-cheat-sheet-plus--insert-selection)))
-  "helm source with all emojis.")
-
-(defun emoji-cheat-sheet-plus--insert-selection (_)
-  "Insert the selected emojis into the buffer."
-  (dolist (c (helm-marked-candidates))
-    (save-match-data
-      (message "candidate %s" c)
-      (string-match "\:.+?\:" c)
-      (insert (match-string 0 c)))))
-
-;;;###autoload
-(defun emoji-cheat-sheet-plus-insert ()
-  "Insert selected emojis from helm source."
-  (interactive)
-  (helm :sources 'emoji-cheat-sheet-plus--helm-source
-        :candidate-number-limit 1000
-        :buffer "*helm emoji cheat sheet*"))
 
 
 ;; Replace emoji codes in buffer with images
